@@ -1,0 +1,33 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'com.github.johnrengelman.shadow' version '5.0.0'
+}
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    compile group: 'com.neovisionaries', name: 'nv-websocket-client', version: '2.9'
+    compile group: 'org.apache.commons', name: 'commons-text', version: '1.8'
+    // Jacksom
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.10.2'
+    compile group: 'com.fasterxml.jackson.module', name: 'jackson-module-parameter-names', version: '2.10.2'
+    compile group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jdk8', version: '2.10.2'
+    // Logging
+    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.30'
+    
+    // lombok
+    compileOnly 'org.projectlombok:lombok:1.18.12'
+    annotationProcessor 'org.projectlombok:lombok:1.18.12'
+}
+
+// Define the main class for the application
+mainClassName = 'sg4e.chatur.examples.SimpleBot'
+
+shadowJar {
+  manifest {
+      attributes 'Main-Class': mainClassName
+  }
+}
