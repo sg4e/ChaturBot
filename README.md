@@ -25,7 +25,7 @@ Fatjars are also available under [*Releases*](https://github.com/sg4e/ChaturBot/
 
 This library requires Java 8 or above.
 
-There are 3 strings required to connect to chat. The 1st is simply the Chaturbate user whose chat you are connecting. The 2nd and 3rd must be retrieved while on the channel page with the chat you wish to connect to, opening your browsers devtools, and refreshing the tab/window. You do not need to be logged in to acquire these strings (which act as a basic authenticator for the WS protocol).
+There are 3 strings required to connect to chat. The 1st is simply the Chaturbate user whose chat you are connecting to. The 2nd and 3rd must be retrieved while on the channel page with the chat you wish to connect to, opening your browser's devtools, and refreshing the tab/window. You do not need to be logged in to acquire these strings (which act as a basic authenticator for the WS protocol).
 
 - String 1: Username of Chaturbate chat to connect to
 - String 2: WebSocket URL
