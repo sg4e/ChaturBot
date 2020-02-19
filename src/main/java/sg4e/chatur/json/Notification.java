@@ -17,9 +17,13 @@ package sg4e.chatur.json;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import java.awt.Color;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.Data;
@@ -61,5 +65,19 @@ public class Notification extends TippingMetadata {
     @JsonProperty("background")
     private void unpackBackground(String c) {
         background = RoomMessage.readColor(c);
+    }
+    
+    @JsonProperty("msg")
+    private void unpackMsg(JsonNode json) {
+        if(json.isArray()) {
+            msg = new ArrayList<>();
+            for(Iterator<JsonNode> iter = json.elements(); iter.hasNext();) {
+                JsonNode next = iter.next();
+                msg.add(next.asText());
+            }
+        }
+        else {
+            msg = Collections.singletonList(json.asText());
+        }
     }
 }
