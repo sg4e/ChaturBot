@@ -39,11 +39,13 @@ public class ChaturBot {
     private static final WebSocketFactory WEBSOCKET_FACTORY = new WebSocketFactory();
     private static final String CONNECT_SUCCESSFUL_MESSAGE = "o";
     private static final String AUTH_SUCCESSFUL_MESSAGE = "a[\"{\\\"args\\\":[\\\"1\\\"],\\\"callback\\\":null,\\\"method\\\":\\\"onAuthResponse\\\"}\"]";
+    private static final String UPDATE_ROOM_COUNT_RESPONSE_METHOD = "onRoomCountUpdate";
     private static final Logger LOG = LoggerFactory.getLogger(ChaturBot.class);
 
     private final ObjectMapper mapper;
     private final WebSocket ws;
     private final String roomName;
+    private volatile boolean authenticated;
 
     /**
      * Creates a new instance; {@link #start()} must be called to open the
@@ -54,8 +56,9 @@ public class ChaturBot {
      * @param roomName
      * @throws IOException
      */
-    protected ChaturBot(String roomName, String URL, String connectAuth) throws IOException {
+    public ChaturBot(String roomName, String URL, String connectAuth) throws IOException {
         this.roomName = roomName;
+        authenticated = false;
         ws = WEBSOCKET_FACTORY.createSocket(URL);
         mapper = new ObjectMapper();
         mapper.findAndRegisterModules();
@@ -98,6 +101,9 @@ public class ChaturBot {
                         case "onSilence":
                             onSilence(parsed.getArgs().get(0).asText(), parsed.getArgs().get(1).asText());
                             break;
+                        case UPDATE_ROOM_COUNT_RESPONSE_METHOD:
+                            //this is handled by a dedicated listener
+                            break;
                         default:
                             LOG.warn(String.format("Unrecognized method %s: %s", parsed.getMethod(), message));
                             break;
@@ -123,6 +129,63 @@ public class ChaturBot {
      */
     public void stop() {
         ws.disconnect();
+    }
+
+    /**
+     * Queries the server for number of users in room and returns the response
+     * asynchronously inside the {@link RoomCount} object. See the object's
+     * documentation for how to manage the asynchronous nature of the query.
+     *
+     * @return
+     * @throws IllegalStateException if {@link #start()} has not been called, or
+     * authentication with server is incomplete (see {@link #isAuthenticated()}.
+     */
+    public RoomCount getRoomCount() {
+        if(!ws.isOpen()) {
+            throw new IllegalStateException(String.format("Must call start() on %s before room count query", getClass().getSimpleName()));
+        }
+        if(!isAuthenticated()) {
+            throw new IllegalStateException("Client has not yet authenticated");
+        }
+        RoomCount count = new RoomCount();
+        ws.addListener(new WebSocketAdapter() {
+            @Override
+            public void handleCallbackError(WebSocket websocket, Throwable cause) throws Exception {
+                LOG.error("Uncaught exception in room count server response parsing");
+                count.setError(cause);
+                ws.removeListener(this);
+            }
+
+            @Override
+            public void onTextMessage(WebSocket websocket, String message) throws Exception {
+                ParsedWebsocketMessage parsed = new ParsedWebsocketMessage(message);
+                if(UPDATE_ROOM_COUNT_RESPONSE_METHOD.equals(parsed.getMethod())) {
+                    count.set(Integer.parseInt(parsed.mapToObject(0, String.class)));
+                    ws.removeListener(this);
+                }
+            }
+        });
+        ws.sendText(String.format("[\"{\\\"method\\\":\\\"updateRoomCount\\\",\\\"data\\\":{\\\"model_name\\\":\\\"%s\\\",\\\"private_room\\\":false}}\"]", roomName));
+        return count;
+    }
+
+    /**
+     * Returns whether the authentication process with the server has succeeded
+     * yet.
+     *
+     * @return
+     */
+    public boolean isAuthenticated() {
+        return authenticated;
+    }
+
+    /**
+     * Returns the room name, as specified to the constructor.
+     *
+     * @return
+     */
+    public String getRoomName() {
+        return roomName;
     }
 
     @Data
@@ -163,6 +226,7 @@ public class ChaturBot {
         if(!AUTH_SUCCESSFUL_MESSAGE.equals(message)) {
             LOG.warn("Unexpected message after connection: {}", message);
         }
+        authenticated = true;
         websocket.sendText(String.format("[\"{\\\"method\\\":\\\"joinRoom\\\",\\\"data\\\":{\\\"room\\\":\\\"%s\\\"}}\"]", roomName));
     }
 

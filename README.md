@@ -90,3 +90,4 @@ Chaturbate's WebSocket chat interface is not a public API. Chaturbate may change
 - Implement connecting to chat with only the model's Chaturbate username (ideally without running any JS)
 - Allow user to make the bot run and send messages over their own Chaturbate account credential
 - Implement update room status
+- Make the asynchronicity in `getRoomCount()` more fluid to the library user
