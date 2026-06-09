@@ -4,6 +4,8 @@ WebSocket library for connecting to Chaturbate chat.
 
 By sg4e.
 
+**Update 6/9/2026:** Sadly, this library doesn't work anymore. Chaturbate redesigned their WS protocol, which broke this library. If you figure out the new protocol, feel free to PR a fix. Chaturbate now offers an official API that exposes chat messages, but the API requires an auth token from the owner of the channel you wish to monitor, which makes the official API impractical for most use cases that this library used to cover.
+
 ## How to use
 
 Gradle (with Jitpack):
